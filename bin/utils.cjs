@@ -162,6 +162,8 @@ class WSSharedDoc extends Y.Doc {
 
   markDeleted() {
     this.deleted = true;
+    console.log(`Document ${this.name} marked as deleted: ${this.deleted}`);
+
   }
 
 
@@ -236,6 +238,7 @@ const closeConn = (doc, conn) => {
 
     if (doc.conns.size === 0) {
       doc.markDeleted(); // Mark the document as deleted
+      console.log(`doc.deleted after marking: ${doc.deleted}`);
 
       const docContent = Y.encodeStateAsUpdate(doc);
       console.log(`Document ${doc.name} content before deletion:`, docContent);
