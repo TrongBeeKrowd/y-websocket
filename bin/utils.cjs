@@ -223,24 +223,30 @@ const closeConn = (doc, conn) => {
     doc.conns.delete(conn);
     awarenessProtocol.removeAwarenessStates(doc.awareness, Array.from(controlledIds), null);
 
-    // Log the number of remaining connections
     console.log(`User disconnected from document ${doc.name}. Remaining connections: ${doc.conns.size}`);
 
-    if (doc.conns.size === 0 && persistence !== null) {
+    if (doc.conns.size === 0) {
       // Log the document content before deletion
       const docContent = Y.encodeStateAsUpdate(doc);
       console.log(`Document ${doc.name} content before deletion:`, docContent);
 
-      // Store state and destroy the Yjs document when no connections are left
-      persistence.writeState(doc.name, doc).then(() => {
-        console.log(`Document ${doc.name} has no more connections. Deleting document.`);
+      // Persist and destroy the document
+      if (persistence) {
+        persistence.writeState(doc.name, doc).then(() => {
+          console.log(`Document ${doc.name} has no more connections. Deleting document.`);
+          doc.destroy();
+          docs.delete(doc.name);
+        });
+      } else {
         doc.destroy();
-      });
-      docs.delete(doc.name);
+        docs.delete(doc.name);
+        console.log(`Document ${doc.name} has been deleted.`);
+      }
     }
   }
   conn.close();
 };
+
 
 
 /**
