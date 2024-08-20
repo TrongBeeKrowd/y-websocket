@@ -84,7 +84,6 @@ const updateHandler = (update, _origin, doc, _tr) => {
   const message = encoding.toUint8Array(encoder)
   doc.conns.forEach((_, conn) => send(doc, conn, message))
 
-  console.log(`Document ${doc.name} updated. Update content:`, update);
 
 }
 
@@ -277,7 +276,7 @@ exports.setupWSConnection = (conn, req, { docName = (req.url || '').slice(1).spl
    console.log(`User connected to document ${doc.name}. Current connections: ${doc.conns.size}`);
 
 
-   
+
   // listen and reply to events
   conn.on('message', /** @param {ArrayBuffer} message */ message => messageListener(conn, doc, new Uint8Array(message)))
 
