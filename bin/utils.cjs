@@ -227,6 +227,10 @@ const closeConn = (doc, conn) => {
     console.log(`User disconnected from document ${doc.name}. Remaining connections: ${doc.conns.size}`);
 
     if (doc.conns.size === 0 && persistence !== null) {
+      // Log the document content before deletion
+      const docContent = Y.encodeStateAsUpdate(doc);
+      console.log(`Document ${doc.name} content before deletion:`, docContent);
+
       // Store state and destroy the Yjs document when no connections are left
       persistence.writeState(doc.name, doc).then(() => {
         console.log(`Document ${doc.name} has no more connections. Deleting document.`);
@@ -237,6 +241,7 @@ const closeConn = (doc, conn) => {
   }
   conn.close();
 };
+
 
 /**
  * @param {WSSharedDoc} doc
