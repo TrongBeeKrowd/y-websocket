@@ -17,11 +17,15 @@ const server = http.createServer((_request, response) => {
 wss.on('connection', setupWSConnection)
 
 server.on('upgrade', (request, socket, head) => {
+  console.log(`User connected from IP: ${request.socket.remoteAddress}`);
+
   // You may check auth of request here..
   // Call `wss.HandleUpgrade` *after* you checked whether the client has access
   // (e.g. by checking cookies, or url parameters).
   // See https://github.com/websockets/ws#client-authentication
   wss.handleUpgrade(request, socket, head, /** @param {any} ws */ ws => {
+    console.log('WebSocket connection established');
+
     wss.emit('connection', ws, request)
   })
 })

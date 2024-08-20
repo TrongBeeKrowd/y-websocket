@@ -83,6 +83,9 @@ const updateHandler = (update, _origin, doc, _tr) => {
   syncProtocol.writeUpdate(encoder, update)
   const message = encoding.toUint8Array(encoder)
   doc.conns.forEach((_, conn) => send(doc, conn, message))
+
+  console.log(`Document ${doc.name} updated. Update content:`, update);
+
 }
 
 /**
@@ -107,6 +110,8 @@ class WSSharedDoc extends Y.Doc {
   constructor (name) {
     super({ gc: gcEnabled })
     this.name = name
+    console.log(`Document created: ${name}`);
+
     /**
      * Maps from conn to set of controlled user ids. Delete all user ids from awareness when this conn is closed
      * @type {Map<Object, Set<number>>}
@@ -141,6 +146,8 @@ class WSSharedDoc extends Y.Doc {
     }
     this.awareness.on('update', awarenessChangeHandler)
     this.on('update', /** @type {any} */ (updateHandler))
+    const content = Y.encodeStateAsUpdate(this);
+    console.log(`Document content for ${name}:`, content);
     if (isCallbackSet) {
       this.on('update', /** @type {any} */ (debounce(
         callbackHandler,
@@ -213,6 +220,8 @@ const messageListener = (conn, doc, message) => {
  */
 const closeConn = (doc, conn) => {
   if (doc.conns.has(conn)) {
+    console.log(`User disconnected from document ${doc.name}`);
+
     /**
      * @type {Set<number>}
      */
@@ -223,6 +232,8 @@ const closeConn = (doc, conn) => {
     if (doc.conns.size === 0 && persistence !== null) {
       // if persisted, we store state and destroy ydocument
       persistence.writeState(doc.name, doc).then(() => {
+        console.log(`Document ${doc.name} has no more connections. Deleting document.`);
+
         doc.destroy()
       })
       docs.delete(doc.name)
