@@ -220,27 +220,24 @@ const messageListener = (conn, doc, message) => {
  */
 const closeConn = (doc, conn) => {
   if (doc.conns.has(conn)) {
-    console.log(`User disconnected from document ${doc.name}`);
+    const controlledIds = doc.conns.get(conn);
+    doc.conns.delete(conn);
+    awarenessProtocol.removeAwarenessStates(doc.awareness, Array.from(controlledIds), null);
 
-    /**
-     * @type {Set<number>}
-     */
-    // @ts-ignore
-    const controlledIds = doc.conns.get(conn)
-    doc.conns.delete(conn)
-    awarenessProtocol.removeAwarenessStates(doc.awareness, Array.from(controlledIds), null)
+    // Log the number of remaining connections
+    console.log(`User disconnected from document ${doc.name}. Remaining connections: ${doc.conns.size}`);
+
     if (doc.conns.size === 0 && persistence !== null) {
-      // if persisted, we store state and destroy ydocument
+      // Store state and destroy the Yjs document when no connections are left
       persistence.writeState(doc.name, doc).then(() => {
         console.log(`Document ${doc.name} has no more connections. Deleting document.`);
-
-        doc.destroy()
-      })
-      docs.delete(doc.name)
+        doc.destroy();
+      });
+      docs.delete(doc.name);
     }
   }
-  conn.close()
-}
+  conn.close();
+};
 
 /**
  * @param {WSSharedDoc} doc
@@ -269,7 +266,18 @@ exports.setupWSConnection = (conn, req, { docName = (req.url || '').slice(1).spl
   conn.binaryType = 'arraybuffer'
   // get doc, initialize if it does not exist yet
   const doc = getYDoc(docName, gc)
+
+  console.log(`Number of connections to document ${doc.name} before new connection: ${doc.conns.size}`);
+
+
+
   doc.conns.set(conn, new Set())
+
+   // Log the number of connections after the new connection is added
+   console.log(`User connected to document ${doc.name}. Current connections: ${doc.conns.size}`);
+
+
+   
   // listen and reply to events
   conn.on('message', /** @param {ArrayBuffer} message */ message => messageListener(conn, doc, new Uint8Array(message)))
 
