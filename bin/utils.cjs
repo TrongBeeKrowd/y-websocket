@@ -108,7 +108,10 @@ class WSSharedDoc extends Y.Doc {
    */
   constructor (name) {
     super({ gc: gcEnabled })
+    
     this.name = name
+    this.deleted = false; // Initialize as not deleted
+
     console.log(`Document created: ${name}`);
 
     /**
@@ -156,6 +159,12 @@ class WSSharedDoc extends Y.Doc {
     }
     this.whenInitialized = contentInitializor(this)
   }
+
+  markDeleted() {
+    this.deleted = true;
+  }
+
+
 }
 
 exports.WSSharedDoc = WSSharedDoc
@@ -226,11 +235,11 @@ const closeConn = (doc, conn) => {
     console.log(`User disconnected from document ${doc.name}. Remaining connections: ${doc.conns.size}`);
 
     if (doc.conns.size === 0) {
-      // Log the document content before deletion
+      doc.markDeleted(); // Mark the document as deleted
+
       const docContent = Y.encodeStateAsUpdate(doc);
       console.log(`Document ${doc.name} content before deletion:`, docContent);
 
-      // Persist and destroy the document
       if (persistence) {
         persistence.writeState(doc.name, doc).then(() => {
           console.log(`Document ${doc.name} has no more connections. Deleting document.`);
